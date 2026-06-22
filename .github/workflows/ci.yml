@@ -1,0 +1,33 @@
+name: ML Model Retraining
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  train:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12.7"
+
+      - name: Install dependencies
+        run: pip install mlflow==2.19.0 scikit-learn pandas numpy matplotlib
+
+      - name: Run model training
+        run: python modelling_tuning.py
+
+      - name: Commit updated artifacts
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add . || echo "No changes"
+          git commit -m "Auto-update model artifacts [skip ci]" || echo "No changes"
+          git push || echo "No push needed"
