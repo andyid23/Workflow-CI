@@ -24,9 +24,9 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 
 # ====== HYPERPARAMETER TUNING ======
 param_grid = {
-    "n_estimators": [100, 200, 400],
-    "max_depth": [None, 10, 20],
-    "min_samples_split": [2, 5, 10]
+    "n_estimators": [100, 150],
+    "max_depth": [10, 15],
+    "min_samples_split": [2, 5]
 }
 
 rf = RandomForestRegressor(random_state=42)
@@ -46,7 +46,7 @@ print(f"MSE: {mse:.4f} | MAE: {mae:.4f} | R2: {r2:.4f}")
 # ====== SAVE MODEL & METRICS KE REPO (bukan ke server) ======
 os.makedirs("model", exist_ok=True)
 model_path = "model/rf_model.joblib"
-joblib.dump(best_model, model_path)
+joblib.dump(best_model, model_path, compress=3)
 
 # Simpan metrics sebagai JSON
 metrics = {
