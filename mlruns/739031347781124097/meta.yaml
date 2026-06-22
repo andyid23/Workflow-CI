@@ -1,0 +1,6 @@
+artifact_location: file:///home/runner/work/Workflow-CI/Workflow-CI/mlruns/739031347781124097
+creation_time: 1782142550067
+experiment_id: '739031347781124097'
+last_update_time: 1782142550067
+lifecycle_stage: active
+name: Workflow-CI_RF_Tuning
