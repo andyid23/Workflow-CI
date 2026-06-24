@@ -35,12 +35,13 @@ jobs:
           pip install mlflow==2.19.0 scikit-learn pandas numpy matplotlib joblib
 
       # ──────────────────────────────────────────────
-      # TAHAP 4: Retraining model + MLflow tracking
-      # Script sudah handle mlflow.set_tracking_uri("file:./mlruns")
-      # dan log_param, log_metric, log_artifact untuk setiap run
+      # TAHAP 4: Eksekusi MLflow Project
+      # Menggunakan perintah standar MLflow:
+      #   mlflow run MLproject --env-manager=local
+      # Bukan cd MLProject && python modelling.py
       # ──────────────────────────────────────────────
-      - name: 🤖 Tahap 4 - Retraining model + MLflow tracking
-        run: python modelling_tuning.py
+      - name: 🤖 Tahap 4 - MLflow run MLproject --env-manager=local
+        run: mlflow run MLProject --env-manager=local
 
       # ──────────────────────────────────────────────
       # TAHAP 5: Upload artifacts ke GitHub
@@ -56,13 +57,13 @@ jobs:
           compression-level: 6
 
       # ──────────────────────────────────────────────
-      # TAHAP 6: Commit model + mlruns ke repositori
+      # TAHAP 6: Commit artifacts ke repositori
       # ──────────────────────────────────────────────
       - name: 💾 Tahap 6 - Commit artifacts ke repositori
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add model/ mlruns/ namadataset_preprocessing/ serve.py Dockerfile.serve
+          git add model/ mlruns/ MLProject/
           if git diff --cached --quiet; then
             echo "✅ Tidak ada perubahan — skip commit"
           else
@@ -72,7 +73,7 @@ jobs:
           fi
 
       # ──────────────────────────────────────────────
-      # TAHAP 7: Build Docker image + push ke Docker Hub
+      # TAHAP 7: Build & Push Docker image ke Docker Hub
       # ──────────────────────────────────────────────
       - name: 🐳 Tahap 7a - Login ke Docker Hub
         uses: docker/login-action@v3
@@ -80,10 +81,10 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
-      - name: 🏗️ Tahap 7b - Build Docker image model serving
-        run: docker build -f Dockerfile.serve -t workflow-ci-model .
+      - name: 🏗️ Tahap 7b - Build Docker image
+        run: docker build -f MLProject/Dockerfile.serve -t workflow-ci-model .
 
-      - name: 🏷️ Tahap 7c - Tag & Push Docker Hub
+      - name: 🏷️ Tahap 7c - Tag & Push ke Docker Hub
         run: |
           docker tag workflow-ci-model ${{ secrets.DOCKER_HUB_USERNAME }}/workflow-ci-model:latest
           docker tag workflow-ci-model ${{ secrets.DOCKER_HUB_USERNAME }}/workflow-ci-model:${{ github.run_id }}

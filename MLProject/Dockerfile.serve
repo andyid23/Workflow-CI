@@ -1,0 +1,7 @@
+FROM python:3.12-slim
+WORKDIR /app
+COPY model/ /app/model/
+COPY MLProject/serve.py /app/serve.py
+RUN pip install flask gunicorn joblib numpy pandas scikit-learn
+EXPOSE 8080
+CMD ["python", "serve.py"]

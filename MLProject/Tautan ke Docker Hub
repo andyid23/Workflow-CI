@@ -1,0 +1,14 @@
+Docker Hub Image: https://hub.docker.com/r/andyid23/workflow-ci-model
+
+Image: andyid23/workflow-ci-model:latest
+
+Pull:
+  docker pull andyid23/workflow-ci-model:latest
+
+Run:
+  docker run -p 8080:8080 andyid23/workflow-ci-model:latest
+
+Test:
+  curl -X POST http://localhost:8080/predict \
+    -H "Content-Type: application/json" \
+    -d '{"features": [100001, 0, 0, 2.418, 23.31, 0, 0, 1, 1, 8.13, 5, 0, 6, 78.5, 0]}'
