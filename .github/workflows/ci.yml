@@ -35,12 +35,12 @@ jobs:
           pip install mlflow==2.19.0 scikit-learn pandas numpy matplotlib joblib
 
       # ──────────────────────────────────────────────
-      # TAHAP 4: Retraining model via MLflow Project
-      # memastikan setiap eksperimen terekam rapi
-      # dari parameter sampai metrik
+      # TAHAP 4: Retraining model + MLflow tracking
+      # Script sudah handle mlflow.set_tracking_uri("file:./mlruns")
+      # dan log_param, log_metric, log_artifact untuk setiap run
       # ──────────────────────────────────────────────
-      - name: 🤖 Tahap 4 - Run MLflow project
-        run: mlflow run . --env-manager=local
+      - name: 🤖 Tahap 4 - Retraining model + MLflow tracking
+        run: python modelling_tuning.py
 
       # ──────────────────────────────────────────────
       # TAHAP 5: Upload artifacts ke GitHub
@@ -70,3 +70,26 @@ jobs:
             git push
             echo "✅ Artifacts berhasil di-commit ke repositori"
           fi
+
+      # ──────────────────────────────────────────────
+      # TAHAP 7: Build Docker image + push ke Docker Hub
+      # ──────────────────────────────────────────────
+      - name: 🐳 Tahap 7 - Login ke Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+      - name: 🏗️ Tahap 7b - Build Docker image via MLflow
+        run: |
+          RUN_ID=$(ls -td mlruns/0/*/ | head -n 1 | cut -d'/' -f3)
+          echo "Latest run_id: $RUN_ID"
+          mlflow models build-docker --model-uri "runs:/$RUN_ID/model" --name "workflow-ci-model"
+
+      - name: 🏷️ Tahap 7c - Tag & Push ke Docker Hub
+        run: |
+          docker tag workflow-ci-model ${{ secrets.DOCKER_HUB_USERNAME }}/workflow-ci-model:latest
+          docker tag workflow-ci-model ${{ secrets.DOCKER_HUB_USERNAME }}/workflow-ci-model:${{ github.run_id }}
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/workflow-ci-model:latest
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/workflow-ci-model:${{ github.run_id }}
+          echo "✅ Docker image berhasil di-push ke Docker Hub"

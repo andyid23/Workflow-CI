@@ -11,12 +11,9 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
 import joblib
 
-# ====== SETUP MLFLOW TRACKING ======
-# Jika dijalankan via `mlflow run .`, MLFLOW_RUN_ID sudah diset otomatis
-# Maka kita skip set_tracking_uri & set_experiment agar tidak konflik
-if "MLFLOW_RUN_ID" not in os.environ:
-    mlflow.set_tracking_uri("file:./mlruns")
-    mlflow.set_experiment("Workflow-CI_RF_Tuning")
+# ====== SETUP LOCAL MLFLOW TRACKING ======
+mlflow.set_tracking_uri("file:./mlruns")
+mlflow.set_experiment("Workflow-CI_RF_Tuning")
 
 # ====== LOAD DATA ======
 DATA_PATH = "namadataset_preprocessing/processed_data.csv"
@@ -84,25 +81,20 @@ plt.savefig("model/actual_vs_predicted.png", dpi=150)
 plt.close()
 
 # ====== LOG KE MLFLOW (local file) ======
-# Saat dijalankan via `mlflow run .`, MLflow CLI sudah manage active run
-# Kita tinggal log langsung tanpa start_run()
-# Saat standalone, kita mulai run baru
-if "MLFLOW_RUN_ID" not in os.environ:
-    mlflow.start_run(run_name="Workflow-CI_Tuned")
+with mlflow.start_run(run_name="Workflow-CI_Tuned"):
+    for k, v in grid.best_params_.items():
+        mlflow.log_param(k, v)
+    mlflow.log_metric("mse", mse)
+    mlflow.log_metric("mae", mae)
+    mlflow.log_metric("r2", r2)
+    mlflow.log_artifact(model_path)
+    mlflow.log_artifact("model/metrics.json")
+    mlflow.log_artifact("model/feature_importance.png")
+    mlflow.log_artifact("model/actual_vs_predicted.png")
+    mlflow.log_artifact(DATA_PATH)
 
-for k, v in grid.best_params_.items():
-    mlflow.log_param(k, v)
-mlflow.log_metric("mse", mse)
-mlflow.log_metric("mae", mae)
-mlflow.log_metric("r2", r2)
-mlflow.log_artifact(model_path)
-mlflow.log_artifact("model/metrics.json")
-mlflow.log_artifact("model/feature_importance.png")
-mlflow.log_artifact("model/actual_vs_predicted.png")
-mlflow.log_artifact(DATA_PATH)
-
-if "MLFLOW_RUN_ID" not in os.environ:
-    mlflow.end_run()
+    print(f"✅ Run selesai — Artifacts disimpan di folder model/ dan mlruns/")
+    print(f"📌 Lihat hasil: ls model/")
 
 print(f"✅ Run selesai — Artifacts disimpan di folder model/ dan mlruns/")
 print(f"📌 Lihat hasil: ls model/")
