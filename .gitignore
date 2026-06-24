@@ -1,0 +1,17 @@
+# MLflow artifacts (terlalu besar untuk git, simpan via GitHub Artifact)
+mlruns/
+mlartifacts/
+
+# Model binary (gunakan Git LFS atau upload terpisah)
+model/*.joblib
+model/*.pkl
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+.env
+
+# OS files
+Thumbs.db
+.DS_Store

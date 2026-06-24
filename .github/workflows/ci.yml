@@ -57,19 +57,21 @@ jobs:
           compression-level: 6
 
       # ──────────────────────────────────────────────
-      # TAHAP 6: Commit artifacts ke repositori
+      # TAHAP 6: Commit MLProject ke repositori
+      # mlruns/ dan model/ sudah di .gitignore (terlalu besar)
+      # disimpan via GitHub Artifact (Tahap 5)
       # ──────────────────────────────────────────────
-      - name: 💾 Tahap 6 - Commit artifacts ke repositori
+      - name: 💾 Tahap 6 - Commit MLProject ke repositori
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add model/ mlruns/ MLProject/
+          git add MLProject/ .github/ .gitignore
           if git diff --cached --quiet; then
             echo "✅ Tidak ada perubahan — skip commit"
           else
-            git commit -m "Auto-update model artifacts [skip ci]"
+            git commit -m "Auto-update MLProject [skip ci]"
             git push
-            echo "✅ Artifacts berhasil di-commit ke repositori"
+            echo "✅ MLProject berhasil di-commit ke repositori"
           fi
 
       # ──────────────────────────────────────────────
