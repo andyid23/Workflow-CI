@@ -81,17 +81,23 @@ plt.savefig("model/actual_vs_predicted.png", dpi=150)
 plt.close()
 
 # ====== LOG KE MLFLOW (local file) ======
-with mlflow.start_run(run_name="Workflow-CI_Tuned"):
-    for k, v in grid.best_params_.items():
-        mlflow.log_param(k, v)
-    mlflow.log_metric("mse", mse)
-    mlflow.log_metric("mae", mae)
-    mlflow.log_metric("r2", r2)
-    mlflow.log_artifact(model_path)
-    mlflow.log_artifact("model/metrics.json")
-    mlflow.log_artifact("model/feature_importance.png")
-    mlflow.log_artifact("model/actual_vs_predicted.png")
-    mlflow.log_artifact(DATA_PATH)
+# Cek apakah sudah ada active run (dari mlflow run . di CI)
+# atau mulai baru (standalone execution)
+if mlflow.active_run() is None:
+    mlflow.start_run(run_name="Workflow-CI_Tuned")
 
-    print(f"✅ Run selesai — Artifacts disimpan di folder model/ dan mlruns/")
-    print(f"📌 Lihat hasil: ls model/")
+for k, v in grid.best_params_.items():
+    mlflow.log_param(k, v)
+mlflow.log_metric("mse", mse)
+mlflow.log_metric("mae", mae)
+mlflow.log_metric("r2", r2)
+mlflow.log_artifact(model_path)
+mlflow.log_artifact("model/metrics.json")
+mlflow.log_artifact("model/feature_importance.png")
+mlflow.log_artifact("model/actual_vs_predicted.png")
+mlflow.log_artifact(DATA_PATH)
+
+mlflow.end_run()
+
+print(f"✅ Run selesai — Artifacts disimpan di folder model/ dan mlruns/")
+print(f"📌 Lihat hasil: ls model/")
