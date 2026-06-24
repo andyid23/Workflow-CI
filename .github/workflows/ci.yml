@@ -74,22 +74,47 @@ jobs:
       # ──────────────────────────────────────────────
       # TAHAP 7: Build Docker image + push ke Docker Hub
       # ──────────────────────────────────────────────
-      - name: 🐳 Tahap 7 - Login ke Docker Hub
+      - name: 🐳 Tahap 7a - Login ke Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
-      - name: 🏗️ Tahap 7b - Build Docker image via MLflow
+      - name: 🏗️ Tahap 7b - Build Docker image model serving
         run: |
-          RUN_ID=$(ls -td mlruns/0/*/ | head -n 1 | cut -d'/' -f3)
-          echo "Latest run_id: $RUN_ID"
-          mlflow models build-docker --model-uri "runs:/$RUN_ID/model" --name "workflow-ci-model"
+          # Buat server Flask untuk serving model
+          cat > serve.py << 'PYEOF'
+import flask, joblib, os
+import numpy as np
+app = flask.Flask(__name__)
+model = joblib.load("model/rf_model.joblib")
+@app.route("/predict", methods=["POST"])
+def predict():
+    data = flask.request.json
+    df = np.array([data.get("features", data)])
+    pred = model.predict(df)
+    return flask.jsonify({"prediction": pred.tolist()})
+@app.route("/health")
+def health():
+    return flask.jsonify({"status": "ok"})
+if __name__ == "__main__":
+    port = int(os.getenv("PORT", 8080))
+    app.run(host="0.0.0.0", port=port)
+PYEOF
+          cat > Dockerfile.serve << 'DOCKERFILE'
+FROM python:3.12-slim
+WORKDIR /app
+COPY model/ /app/model/
+COPY serve.py /app/serve.py
+RUN pip install flask gunicorn joblib numpy pandas scikit-learn
+EXPOSE 8080
+CMD ["python", "serve.py"]
+DOCKERFILE
+          docker build -f Dockerfile.serve -t workflow-ci-model .
 
-      - name: 🏷️ Tahap 7c - Tag & Push ke Docker Hub
+      - name: 🏷️ Tahap 7c - Tag & Push Docker Hub
         run: |
           docker tag workflow-ci-model ${{ secrets.DOCKER_HUB_USERNAME }}/workflow-ci-model:latest
           docker tag workflow-ci-model ${{ secrets.DOCKER_HUB_USERNAME }}/workflow-ci-model:${{ github.run_id }}
           docker push ${{ secrets.DOCKER_HUB_USERNAME }}/workflow-ci-model:latest
           docker push ${{ secrets.DOCKER_HUB_USERNAME }}/workflow-ci-model:${{ github.run_id }}
-          echo "✅ Docker image berhasil di-push ke Docker Hub"
