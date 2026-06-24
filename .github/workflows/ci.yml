@@ -35,10 +35,10 @@ jobs:
           pip install mlflow==2.19.0 scikit-learn pandas numpy matplotlib joblib
 
       # ──────────────────────────────────────────────
-      # TAHAP 4: Retraining model via MLflow Project
+      # TAHAP 4: Retraining model via MLflow tracking
       # ──────────────────────────────────────────────
-      - name: 🤖 Tahap 4 - Retraining model via MLflow
-        run: mlflow run . --env-manager=local
+      - name: 🤖 Tahap 4 - Retraining model
+        run: python modelling_tuning.py
 
       # ──────────────────────────────────────────────
       # TAHAP 5: Upload artifacts ke GitHub
