@@ -1,0 +1,15 @@
+artifact_uri: file:C:/Users/Dragon/Documents/github/sainsdata/bangun-mesin/Workflow-CI/mlruns/459861120610113734/da27aa74648c4154bfcfd050bbca06c9/artifacts
+end_time: 1782284144104
+entry_point_name: ''
+experiment_id: '459861120610113734'
+lifecycle_stage: active
+run_id: da27aa74648c4154bfcfd050bbca06c9
+run_name: Workflow-CI_Tuned
+run_uuid: da27aa74648c4154bfcfd050bbca06c9
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1782284144077
+status: 3
+tags: []
+user_id: runner
