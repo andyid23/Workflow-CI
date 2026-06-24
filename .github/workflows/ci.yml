@@ -62,7 +62,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add model/ mlruns/ namadataset_preprocessing/
+          git add model/ mlruns/ namadataset_preprocessing/ serve.py Dockerfile.serve
           if git diff --cached --quiet; then
             echo "✅ Tidak ada perubahan — skip commit"
           else
@@ -81,36 +81,7 @@ jobs:
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
       - name: 🏗️ Tahap 7b - Build Docker image model serving
-        run: |
-          # Buat server Flask untuk serving model
-          cat > serve.py << 'PYEOF'
-import flask, joblib, os
-import numpy as np
-app = flask.Flask(__name__)
-model = joblib.load("model/rf_model.joblib")
-@app.route("/predict", methods=["POST"])
-def predict():
-    data = flask.request.json
-    df = np.array([data.get("features", data)])
-    pred = model.predict(df)
-    return flask.jsonify({"prediction": pred.tolist()})
-@app.route("/health")
-def health():
-    return flask.jsonify({"status": "ok"})
-if __name__ == "__main__":
-    port = int(os.getenv("PORT", 8080))
-    app.run(host="0.0.0.0", port=port)
-PYEOF
-          cat > Dockerfile.serve << 'DOCKERFILE'
-FROM python:3.12-slim
-WORKDIR /app
-COPY model/ /app/model/
-COPY serve.py /app/serve.py
-RUN pip install flask gunicorn joblib numpy pandas scikit-learn
-EXPOSE 8080
-CMD ["python", "serve.py"]
-DOCKERFILE
-          docker build -f Dockerfile.serve -t workflow-ci-model .
+        run: docker build -f Dockerfile.serve -t workflow-ci-model .
 
       - name: 🏷️ Tahap 7c - Tag & Push Docker Hub
         run: |
