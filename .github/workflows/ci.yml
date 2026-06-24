@@ -25,8 +25,8 @@ jobs:
         run: |
           pip install mlflow==2.19.0 scikit-learn pandas numpy matplotlib joblib
 
-      - name: Run model training
-        run: python modelling_tuning.py
+      - name: Run model training via MLflow
+        run: mlflow run . --env-manager=local
 
       - name: Commit updated artifacts
         run: |
